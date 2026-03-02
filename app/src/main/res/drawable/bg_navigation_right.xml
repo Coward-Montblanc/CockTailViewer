@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- 배경 이미지: 오른쪽 기준, 세로는 꽉 채움 -->
+    <item>
+        <bitmap
+            android:src="@drawable/bg_navigation"
+            android:gravity="right|fill_vertical"
+            android:tileMode="disabled" />
+    </item>
+
+
+</layer-list>

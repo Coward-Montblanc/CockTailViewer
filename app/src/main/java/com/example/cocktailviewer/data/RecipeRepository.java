@@ -1,0 +1,349 @@
+package com.example.cocktailviewer.data;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
+import com.example.cocktailviewer.model.Ingredient;
+import com.example.cocktailviewer.model.Recipe;
+import com.example.cocktailviewer.model.RecipeIngredient;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+
+public class RecipeRepository {
+
+    private final DbHelper dbHelper;
+
+    public RecipeRepository(Context context) {
+        this.dbHelper = new DbHelper(context);
+    }
+
+    // ---------- Ingredients ----------
+    public long addIngredientIfNotExists(String name) {
+        String n = safeTrim(name);
+        if (n.isEmpty()) return -1;
+
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("name", n);
+        cv.put("has", 0);
+        return db.insertWithOnConflict("ingredients", null, cv, SQLiteDatabase.CONFLICT_IGNORE);
+    }
+
+    public List<Ingredient> getAllIngredients() {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT id, name, has FROM ingredients ORDER BY name COLLATE NOCASE ASC", null);
+
+        List<Ingredient> out = new ArrayList<>();
+        try {
+            while (c.moveToNext()) {
+                Ingredient i = new Ingredient();
+                i.id = c.getLong(0);
+                i.name = c.getString(1);
+                i.has = c.getInt(2) == 1;
+                out.add(i);
+            }
+        } finally {
+            c.close();
+        }
+        return out;
+    }
+
+    public void setIngredientHas(long id, boolean has) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("has", has ? 1 : 0);
+        db.update("ingredients", cv, "id=?", new String[]{String.valueOf(id)});
+    }
+
+    public void deleteIngredient(long id) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.delete("ingredients", "id=?", new String[]{String.valueOf(id)});
+    }
+
+    public HashSet<String> getOwnedIngredientNames() {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT name FROM ingredients WHERE has=1", null);
+
+        HashSet<String> out = new HashSet<>();
+        try {
+            while (c.moveToNext()) {
+                out.add(norm(c.getString(0)));
+            }
+        } finally {
+            c.close();
+        }
+        return out;
+    }
+
+
+    // ---------- Recipes ----------
+    public long upsertRecipeByName(Recipe recipe) {
+        // 기본 정책: 이름 중복이면 덮어쓰기
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        Long existingId = findRecipeIdByName(recipe.name);
+        if (existingId != null) {
+            ContentValues cv = new ContentValues();
+            cv.put("instructions", recipe.instructions);
+            cv.put("abv", recipe.abv);
+            cv.put("sweet", recipe.sweet);
+            cv.put("sour", recipe.sour);
+            cv.put("favorite", recipe.favorite ? 1 : 0);
+            db.update("recipes", cv, "id=?", new String[]{String.valueOf(existingId)});
+            return existingId;
+        } else {
+            ContentValues cv = new ContentValues();
+            cv.put("name", recipe.name);
+            cv.put("instructions", recipe.instructions);
+            cv.put("abv", recipe.abv);
+            cv.put("sweet", recipe.sweet);
+            cv.put("sour", recipe.sour);
+            cv.put("favorite", recipe.favorite ? 1 : 0);
+            return db.insert("recipes", null, cv);
+        }
+    }
+
+    private Long findRecipeIdByName(String name) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT id FROM recipes WHERE name=? LIMIT 1", new String[]{name});
+        try {
+            if (c.moveToFirst()) return c.getLong(0);
+            return null;
+        } finally {
+            c.close();
+        }
+    }
+
+    public void setFavorite(long recipeId, boolean favorite) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("favorite", favorite ? 1 : 0);
+        db.update("recipes", cv, "id=?", new String[]{String.valueOf(recipeId)});
+    }
+
+    public Recipe getRecipe(long id) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT id, name, instructions, abv, sweet, sour, favorite FROM recipes WHERE id=? LIMIT 1",
+                new String[]{String.valueOf(id)});
+        try {
+            if (!c.moveToFirst()) return null;
+            Recipe r = new Recipe();
+            r.id = c.getLong(0);
+            r.name = c.getString(1);
+            r.instructions = c.getString(2);
+            r.abv = c.getInt(3);
+            r.sweet = c.getInt(4);
+            r.sour = c.getInt(5);
+            r.favorite = c.getInt(6) == 1;
+            return r;
+        } finally {
+            c.close();
+        }
+    }
+
+    public List<RecipeIngredient> getRecipeIngredients(long recipeId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("""
+            SELECT id, recipe_id, ingredient_name, amount, optional
+            FROM recipe_ingredients
+            WHERE recipe_id=?
+            ORDER BY optional ASC, id ASC
+        """, new String[]{String.valueOf(recipeId)});
+
+        List<RecipeIngredient> out = new ArrayList<>();
+        try {
+            while (c.moveToNext()) {
+                RecipeIngredient ri = new RecipeIngredient();
+                ri.id = c.getLong(0);
+                ri.recipeId = c.getLong(1);
+                ri.ingredientName = c.getString(2);
+                ri.amount = c.getString(3);
+                ri.optional = c.getInt(4) == 1;
+                out.add(ri);
+            }
+        } finally {
+            c.close();
+        }
+        return out;
+    }
+
+    public void replaceRecipeIngredients(long recipeId, List<RecipeIngredient> ingredients) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.delete("recipe_ingredients", "recipe_id=?", new String[]{String.valueOf(recipeId)});
+
+        for (RecipeIngredient ri : ingredients) {
+            ContentValues cv = new ContentValues();
+            cv.put("recipe_id", recipeId);
+            cv.put("ingredient_name", safeTrim(ri.ingredientName));
+            cv.put("amount", ri.amount == null ? "" : ri.amount);
+            cv.put("optional", ri.optional ? 1 : 0);
+            db.insert("recipe_ingredients", null, cv);
+            // 재료 마스터에 자동 등록(보유=false)
+            addIngredientIfNotExists(ri.ingredientName);
+        }
+    }
+
+    // ---------- Recent ----------
+    public void markViewed(long recipeId) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("recipe_id", recipeId);
+        cv.put("viewed_at", System.currentTimeMillis());
+        db.insertWithOnConflict("recent_views", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+
+        // trim 10
+        db.execSQL("""
+          DELETE FROM recent_views
+          WHERE recipe_id NOT IN (
+            SELECT recipe_id FROM recent_views ORDER BY viewed_at DESC LIMIT 10
+          )
+        """);
+    }
+
+    public List<Long> getRecentIds(int limit) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT recipe_id FROM recent_views ORDER BY viewed_at DESC LIMIT " + limit, null);
+
+        List<Long> out = new ArrayList<>();
+        try {
+            while (c.moveToNext()) out.add(c.getLong(0));
+        } finally {
+            c.close();
+        }
+        return out;
+    }
+
+    // ---------- Home list building ----------
+    public List<Recipe> getCraftableRecipes() {
+        // 1) owned 재료
+        HashSet<String> owned = getOwnedIngredientNames();
+
+        // 2) recipeId -> required ingredient names
+        HashMap<Long, List<String>> requiredMap = new HashMap<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("""
+            SELECT recipe_id, ingredient_name
+            FROM recipe_ingredients
+            WHERE optional=0
+        """, null);
+
+        try {
+            while (c.moveToNext()) {
+                long rid = c.getLong(0);
+                String nm = norm(c.getString(1));
+                requiredMap.computeIfAbsent(rid, k -> new ArrayList<>()).add(nm);
+            }
+        } finally {
+            c.close();
+        }
+
+        // 3) 모든 recipes에서 craftable만 필터
+        Cursor rc = db.rawQuery("SELECT id, name, instructions, abv, sweet, sour, favorite FROM recipes", null);
+        List<Recipe> out = new ArrayList<>();
+        try {
+            while (rc.moveToNext()) {
+                long rid = rc.getLong(0);
+
+                List<String> req = requiredMap.get(rid);
+                if (req == null) {
+                    // 필수재료가 0개인 레시피를 만들 수 있다고 볼지 정책 필요.
+                    // 여기서는 "0개면 craftable로 취급" (원하면 false로 바꿔도 됨)
+                    req = new ArrayList<>();
+                }
+
+                boolean ok = true;
+                for (String rname : req) {
+                    if (!owned.contains(rname)) { ok = false; break; }
+                }
+                if (!ok) continue;
+
+                Recipe r = new Recipe();
+                r.id = rid;
+                r.name = rc.getString(1);
+                r.instructions = rc.getString(2);
+                r.abv = rc.getInt(3);
+                r.sweet = rc.getInt(4);
+                r.sour = rc.getInt(5);
+                r.favorite = rc.getInt(6) == 1;
+                out.add(r);
+            }
+        } finally {
+            rc.close();
+        }
+        return out;
+    }
+
+    // ---------- utils ----------
+    private static String safeTrim(String s) {
+        return s == null ? "" : s.trim();
+    }
+    private static String norm(String s) {
+        if (s == null) return "";
+        // 일반 공백 + 특수공백(NBSP)까지 정리
+        String t = s.replace('\u00A0', ' ').trim();
+        // 중간에 공백이 여러개면 1개로 (선택이지만 추천)
+        t = t.replaceAll("\\s+", " ");
+        return t.toLowerCase(java.util.Locale.ROOT);
+    }
+    public List<Recipe> getAllRecipes() {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT id, name, instructions, abv, sweet, sour, favorite FROM recipes ORDER BY name COLLATE NOCASE ASC", null);
+
+        List<Recipe> out = new ArrayList<>();
+        try {
+            while (c.moveToNext()) {
+                Recipe r = new Recipe();
+                r.id = c.getLong(0);
+                r.name = c.getString(1);
+                r.instructions = c.getString(2);
+                r.abv = c.getInt(3);
+                r.sweet = c.getInt(4);
+                r.sour = c.getInt(5);
+                r.favorite = c.getInt(6) == 1;
+                out.add(r);
+            }
+        } finally {
+            c.close();
+        }
+        return out;
+    }
+    public static class IngredientLine {
+        public String name;
+        public String amount;
+        public boolean optional;
+    }
+
+    public List<IngredientLine> getIngredientsOfRecipe(long recipeId) {
+
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        Cursor c = db.rawQuery("""
+        SELECT ingredient_name, amount, optional
+        FROM recipe_ingredients
+        WHERE recipe_id=?
+        ORDER BY optional ASC
+    """, new String[]{String.valueOf(recipeId)});
+
+        List<IngredientLine> out = new ArrayList<>();
+
+        try {
+            while (c.moveToNext()) {
+                IngredientLine line = new IngredientLine();
+                line.name = c.getString(0);
+                line.amount = c.getString(1);
+                line.optional = c.getInt(2) == 1;
+                out.add(line);
+            }
+        } finally {
+            c.close();
+        }
+
+        return out;
+    }
+
+}

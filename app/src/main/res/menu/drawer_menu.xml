@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="none">
+        <item
+            android:id="@+id/menu_home"
+            android:title="메인화면" />
+        <item
+            android:id="@+id/menu_all_recipes"
+            android:title="전체 레시피" />
+        <item android:id="@+id/menu_import_yaml"
+            android:title="레시피파일 등록" />
+        <item android:id="@+id/menu_add_recipe"
+            android:title="레시피 등록" />
+        <item android:id="@+id/menu_export_yaml"
+            android:title="레시피파일 추출" />
+        <item android:id="@+id/menu_ingredients"
+            android:title="재료 등록" />
+    </group>
+</menu>

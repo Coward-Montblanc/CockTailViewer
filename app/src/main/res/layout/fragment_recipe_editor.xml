@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingTop="80dp"
+    android:paddingHorizontal="55dp"
+    android:fillViewport="true"
+    android:background="@drawable/bg_home">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@drawable/bg_glass_panel"
+        android:padding="12dp">
+
+        <EditText
+            android:id="@+id/etName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="칵테일 이름"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="8dp">
+
+            <EditText
+                android:id="@+id/etAbv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="도수(%)"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#FFFEFE"
+                android:inputType="number"/>
+
+            <EditText
+                android:id="@+id/etSweet"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:hint="달콤함(0~10)"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#FFFEFE"
+                android:inputType="number"/>
+
+            <EditText
+                android:id="@+id/etSour"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:hint="상큼함(0~10)"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#FFFEFE"
+                android:inputType="number"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="필수 재료"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:textStyle="bold"
+            android:paddingTop="12dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddRequired"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+ 필수 재료 추가"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRequired"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:paddingTop="6dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="선택 재료"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:textStyle="bold"
+            android:paddingTop="12dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddOptional"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="+ 선택 재료 추가"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvOptional"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:nestedScrollingEnabled="false"
+            android:paddingTop="6dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="레시피"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:textStyle="bold"
+            android:paddingTop="12dp"/>
+
+        <EditText
+            android:id="@+id/etInstructions"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:gravity="top"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:hint="줄바꿈 포함 텍스트"
+            android:inputType="textMultiLine"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="등록"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="100dp"/>
+
+    </LinearLayout>
+    </LinearLayout>
+</ScrollView>
