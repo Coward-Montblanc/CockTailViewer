@@ -50,7 +50,9 @@ public class RecipeDetailFragment extends Fragment {
 
         if (r == null) {
             tvTitle.setText("Not Found");
-            tvIns.setText("");
+            tvIngredients.setText("");
+            tvGlass.setVisibility(View.GONE);
+            tvRecipe.setText("");
             return;
         }
         v.findViewById(R.id.btnDelete).setOnClickListener(view -> {
