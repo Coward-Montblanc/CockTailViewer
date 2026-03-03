@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DbHelper extends SQLiteOpenHelper {
 
     public static final String DB_NAME = "cocktail.db";
-    public static final int DB_VERSION = 2;
+    public static final int DB_VERSION = 3;
 
     public DbHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -35,7 +35,8 @@ public class DbHelper extends SQLiteOpenHelper {
               abv INTEGER NOT NULL,
               sweet INTEGER NOT NULL,
               sour INTEGER NOT NULL,
-              favorite INTEGER NOT NULL DEFAULT 0
+              favorite INTEGER NOT NULL DEFAULT 0,
+              rating INTEGER NOT NULL DEFAULT 0
             )
         """);
 
@@ -66,6 +67,9 @@ public class DbHelper extends SQLiteOpenHelper {
             db.execSQL("ALTER TABLE recipes ADD COLUMN category TEXT NOT NULL DEFAULT ''");
             db.execSQL("ALTER TABLE recipes ADD COLUMN category_detail TEXT NOT NULL DEFAULT ''");
             db.execSQL("ALTER TABLE recipes ADD COLUMN glass TEXT NOT NULL DEFAULT ''");
+        }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE recipes ADD COLUMN rating INTEGER NOT NULL DEFAULT 0");
         }
     }
 }

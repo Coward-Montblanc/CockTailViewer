@@ -26,6 +26,20 @@
                 android:textColor="#FFFFFF"
                 android:textColorHint="#FFFEFE"
                 android:text="Title"/>
+
+                <TextView
+                    android:id="@+id/tvRatingValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="별점: 0/10"
+                    android:layout_marginTop="8dp"/>
+
+                <SeekBar
+                    android:id="@+id/sbRating"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="10"/>
+                    
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

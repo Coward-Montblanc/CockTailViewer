@@ -14,4 +14,5 @@ public class Recipe {
     public int sweet;
     public int sour;
     public boolean favorite;
+    public int rating; // 0~10
 }

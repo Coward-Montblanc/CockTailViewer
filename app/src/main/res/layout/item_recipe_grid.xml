@@ -51,5 +51,11 @@
             android:layout_below="@id/tvSweet"
             android:text="상큼: ★★☆☆☆" />
 
+        <TextView
+            android:id="@+id/tvRating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="별점: 0/10"/>
+
     </RelativeLayout>
 </com.google.android.material.card.MaterialCardView>

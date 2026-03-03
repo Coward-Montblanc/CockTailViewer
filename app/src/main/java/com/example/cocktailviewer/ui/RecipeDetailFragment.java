@@ -47,6 +47,8 @@ public class RecipeDetailFragment extends Fragment {
         TextView tvIngredients = v.findViewById(R.id.tvIngredients);
         TextView tvGlass = v.findViewById(R.id.tvGlass);
         TextView tvRecipe = v.findViewById(R.id.tvRecipe);
+        TextView tvRatingValue = view.findViewById(R.id.tvRatingValue);
+        SeekBar sbRating = view.findViewById(R.id.sbRating);
 
         if (r == null) {
             tvTitle.setText("Not Found");
@@ -58,7 +60,7 @@ public class RecipeDetailFragment extends Fragment {
         v.findViewById(R.id.btnDelete).setOnClickListener(view -> {
             new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                     .setTitle("삭제")
-                    .setMessage("이 레시피를 삭제할까요?")
+                    .setMessage("이 레시피를 삭제합니까?")
                     .setPositiveButton("예", (d, w) -> {
                         repo.deleteRecipe(r.id);
                         requireActivity().getSupportFragmentManager().popBackStack();
@@ -71,6 +73,18 @@ public class RecipeDetailFragment extends Fragment {
                     .replace(R.id.fragmentContainer, RecipeEditorFragment.newInstance(r.id))
                     .addToBackStack(null)
                     .commit();
+        });
+        sbRating.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvRatingValue.setText("별점: " + progress + "/10");
+            }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {
+                int v = seekBar.getProgress();
+                repo.setRating(recipe.id, v); // repo는 네가 쓰는 repository 인스턴스
+                recipe.rating = v;            // 메모리 값도 갱신(옵션)
+            }
         });
         tvTitle.setText(r.name);
         List<RecipeRepository.IngredientLine> lines =
@@ -101,6 +115,9 @@ public class RecipeDetailFragment extends Fragment {
 
         tvIngredients.setText(sb.toString().trim());
         tvRecipe.setText(r.instructions == null ? "" : r.instructions);
+
+        sbRating.setProgress(Math.max(0, Math.min(10, recipe.rating)));
+        tvRatingValue.setText("별점: " + sbRating.getProgress() + "/10");
 
         // glass 표시
         String g = (r.glass == null) ? "" : r.glass.trim();

@@ -153,12 +153,14 @@ public class RecipeEditorFragment extends Fragment {
         r.sour = sour;
         r.instructions = instructions == null ? "" : instructions;
 
+
         if (editRecipeId == -1) {
             if (repo.existsRecipeName(name)) {
                 toast("이미 같은 이름의 레시피가 있습니다.");
                 return;
             }
             long newId = repo.upsertRecipeByName(r);
+            r.rating = 0;
             saveIngredients(newId);
         } else {
             if (repo.existsRecipeNameExceptId(name, editRecipeId)) {
@@ -167,6 +169,7 @@ public class RecipeEditorFragment extends Fragment {
             }
             Recipe old = repo.getRecipe(editRecipeId);
             r.favorite = old != null && old.favorite;
+            r.rating = (old != null) ? old.rating : 0;
 
             repo.updateRecipeById(r);
             saveIngredients(editRecipeId);

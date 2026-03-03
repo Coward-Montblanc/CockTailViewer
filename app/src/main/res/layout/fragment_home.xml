@@ -106,6 +106,15 @@
                     android:textColor="#FFFFFF"
                     android:layout_weight="1"
                     android:text="즐겨찾기" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRandom"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textColor="#FFFFFF"
+                    android:layout_weight="1"
+                    android:text="무작위 추천" />
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView

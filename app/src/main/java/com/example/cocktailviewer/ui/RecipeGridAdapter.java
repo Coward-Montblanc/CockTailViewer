@@ -49,6 +49,8 @@ public class RecipeGridAdapter extends RecyclerView.Adapter<RecipeGridAdapter.VH
         h.tvSweet.setText("달콤: " + stars(r.sweet));
         h.tvSour.setText("상큼: " + stars(r.sour));
         h.btnStar.setImageResource(r.favorite ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
+        int rating = Math.max(0, Math.min(10, r.rating));
+        h.tvRating.setText("별점: " + rating + "/10");
 
         h.itemView.setOnClickListener(v -> listener.onClick(r));
         h.btnStar.setOnClickListener(v -> listener.onToggleFavorite(r));
@@ -57,7 +59,7 @@ public class RecipeGridAdapter extends RecyclerView.Adapter<RecipeGridAdapter.VH
     @Override public int getItemCount() { return items.size(); }
 
     static class VH extends RecyclerView.ViewHolder {
-        TextView tvName, tvAbv, tvSweet, tvSour;
+        TextView tvName, tvAbv, tvSweet, tvSour, tvRating;
         ImageButton btnStar;
         VH(@NonNull View itemView) {
             super(itemView);
@@ -66,6 +68,7 @@ public class RecipeGridAdapter extends RecyclerView.Adapter<RecipeGridAdapter.VH
             tvSweet = itemView.findViewById(R.id.tvSweet);
             tvSour = itemView.findViewById(R.id.tvSour);
             btnStar = itemView.findViewById(R.id.btnStar);
+            tvRating = itemView.findViewById(R.id.tvRating);
         }
     }
 

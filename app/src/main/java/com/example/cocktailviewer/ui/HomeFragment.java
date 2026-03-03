@@ -54,6 +54,21 @@ public class HomeFragment extends Fragment {
         btnRecent = v.findViewById(R.id.btnRecent);
         btnFav = v.findViewById(R.id.btnFav);
 
+        Button btnRandom = v.findViewById(R.id.btnRandom);
+
+        btnRandom.setOnClickListener(view -> {
+            Long id = repo.getRandomRecipeId();
+            if (id == null) {
+                Toast.makeText(requireContext(), "레시피가 없습니다.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            requireActivity().getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, RecipeDetailFragment.newInstance(id))
+                    .addToBackStack(null)
+                    .commit();
+        });
+
         RecyclerView rv = v.findViewById(R.id.rvGrid);
         rv.setLayoutManager(new GridLayoutManager(requireContext(), 2));
         adapter = new RecipeGridAdapter(new RecipeGridAdapter.Listener() {

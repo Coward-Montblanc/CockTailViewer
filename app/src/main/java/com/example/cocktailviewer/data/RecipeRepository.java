@@ -22,6 +22,10 @@ public class RecipeRepository {
         this.dbHelper = new DbHelper(context);
     }
 
+    private int clamp0to10(int v) {
+        return Math.max(0, Math.min(10, v));
+    }
+
     // ---------- Ingredients ----------
     public long addIngredientIfNotExists(String name) {
         String n = safeTrim(name);
@@ -96,6 +100,7 @@ public class RecipeRepository {
             cv.put("category", recipe.category == null ? "" : recipe.category);
             cv.put("category_detail", recipe.categoryDetail == null ? "" : recipe.categoryDetail);
             cv.put("glass", recipe.glass == null ? "" : recipe.glass);
+            cv.put("rating", clamp0to10(recipe.rating));
             db.update("recipes", cv, "id=?", new String[]{String.valueOf(existingId)});
             return existingId;
         } else {
@@ -109,6 +114,7 @@ public class RecipeRepository {
             cv.put("category", recipe.category == null ? "" : recipe.category);
             cv.put("category_detail", recipe.categoryDetail == null ? "" : recipe.categoryDetail);
             cv.put("glass", recipe.glass == null ? "" : recipe.glass);
+            cv.put("rating", clamp0to10(recipe.rating));
             return db.insert("recipes", null, cv);
         }
     }
@@ -134,7 +140,7 @@ public class RecipeRepository {
     public Recipe getRecipe(long id) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
         Cursor c = db.rawQuery(
-            "SELECT id, name, category, category_detail, glass, instructions, abv, sweet, sour, favorite " +
+            "SELECT id, name, category, category_detail, glass, instructions, abv, sweet, sour, favorite, rating " +
             "FROM recipes WHERE id=? LIMIT 1",
             new String[]{String.valueOf(id)}
         );
@@ -151,6 +157,7 @@ public class RecipeRepository {
             r.sweet = c.getInt(7);
             r.sour = c.getInt(8);
             r.favorite = c.getInt(9) == 1;
+            r.rating = c.getInt(10);
             return r;
         } finally {
             c.close();
@@ -278,7 +285,7 @@ public class RecipeRepository {
         }
 
         // 3) 모든 recipes에서 craftable만 필터
-        Cursor rc = db.rawQuery("SELECT id, name, instructions, abv, sweet, sour, favorite FROM recipes", null);
+        Cursor rc = db.rawQuery("SELECT id, name, category, category_detail, glass, instructions, abv, sweet, sour, favorite, rating FROM recipes", null);
         List<Recipe> out = new ArrayList<>();
         try {
             while (rc.moveToNext()) {
@@ -286,8 +293,6 @@ public class RecipeRepository {
 
                 List<String> req = requiredMap.get(rid);
                 if (req == null) {
-                    // 필수재료가 0개인 레시피를 만들 수 있다고 볼지 정책 필요.
-                    // 여기서는 "0개면 craftable로 취급" (원하면 false로 바꿔도 됨)
                     req = new ArrayList<>();
                 }
 
@@ -300,11 +305,15 @@ public class RecipeRepository {
                 Recipe r = new Recipe();
                 r.id = rid;
                 r.name = rc.getString(1);
-                r.instructions = rc.getString(2);
-                r.abv = rc.getInt(3);
-                r.sweet = rc.getInt(4);
-                r.sour = rc.getInt(5);
-                r.favorite = rc.getInt(6) == 1;
+                r.category = rc.getString(2);
+                r.categoryDetail = rc.getString(3);
+                r.glass = rc.getString(4);
+                r.instructions = rc.getString(5);
+                r.abv = rc.getInt(6);
+                r.sweet = rc.getInt(7);
+                r.sour = rc.getInt(8);
+                r.favorite = rc.getInt(9) == 1;
+                r.rating = rc.getInt(10);
                 out.add(r);
             }
         } finally {
@@ -327,7 +336,7 @@ public class RecipeRepository {
     }
     public List<Recipe> getAllRecipes() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = db.rawQuery("SELECT id, name, instructions, abv, sweet, sour, favorite FROM recipes ORDER BY name COLLATE NOCASE ASC", null);
+        Cursor c = db.rawQuery("SELECT id, name, category, category_detail, glass, instructions, abv, sweet, sour, favorite, rating FROM recipes ORDER BY name COLLATE NOCASE ASC", null);
 
         List<Recipe> out = new ArrayList<>();
         try {
@@ -335,11 +344,15 @@ public class RecipeRepository {
                 Recipe r = new Recipe();
                 r.id = c.getLong(0);
                 r.name = c.getString(1);
-                r.instructions = c.getString(2);
-                r.abv = c.getInt(3);
-                r.sweet = c.getInt(4);
-                r.sour = c.getInt(5);
-                r.favorite = c.getInt(6) == 1;
+                r.category = c.getString(2);
+                r.categoryDetail = c.getString(3);
+                r.glass = c.getString(4);
+                r.instructions = c.getString(5);
+                r.abv = c.getInt(6);
+                r.sweet = c.getInt(7);
+                r.sour = c.getInt(8);
+                r.favorite = c.getInt(9) == 1;
+                r.rating = c.getInt(10);
                 out.add(r);
             }
         } finally {
@@ -399,6 +412,25 @@ public class RecipeRepository {
         Cursor c = db.rawQuery("SELECT id FROM recipes WHERE name=? LIMIT 1", new String[]{name});
         try {
             return c.moveToFirst();
+        } finally {
+            c.close();
+        }
+    }
+
+    public void setRating(long recipeId, int rating) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("rating", clamp0to10(rating));
+        db.update("recipes", cv, "id=?", new String[]{ String.valueOf(recipeId) });
+    }
+
+    public Long getRandomRecipeId() {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT id FROM recipes ORDER BY RANDOM() LIMIT 1", null);
+
+        try {
+            if(c.moveToFirst()) return c.getLong(0);
+            return null;
         } finally {
             c.close();
         }
