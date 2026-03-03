@@ -28,6 +28,28 @@
             android:textColor="#FFFFFF"
             android:textColorHint="#FFFEFE"/>
 
+        <EditText
+            android:id="@+id/etCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:hint="카테고리 (IBA-2024등)"/>
+        <EditText
+            android:id="@+id/etCategoryDetail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:hint="카테고리2 (The Unforgettables등)"/>
+        <EditText
+            android:id="@+id/etGlass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:hint="잔"/>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

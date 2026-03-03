@@ -16,16 +16,15 @@ import java.util.*;
 public class YamlIO {
 
     // ===== Import =====
-    // YAML 구조(권장):
+    // YAML 구조:
     // <칵테일명>:
     //   ingredients: [{name: "...", amount: "..."}, ...]
     //   optionalIngredients: [{name: "...", amount: "..."}, ...]
-    //   recipe: "멀티라인 문자열" (| 블록 문자열이면 더 좋음)
+    //   recipe: "멀티라인 문자열"
     //   abv: 15
     //   sweet: 3
     //   sour: 7
     //
-    // recipe 필드는 (추측) 문자열 or 문자열 리스트 둘 다 들어올 수 있어 보여서, 둘 다 지원하게 함.
 
     public static int importFromUri(Context context, RecipeRepository repo, Uri uri) throws IOException {
         String yamlText = readAllText(context, uri);
@@ -55,6 +54,9 @@ public class YamlIO {
             r.abv = asInt(node.get("abv"), 0);
             r.sweet = clamp(asInt(node.get("sweet"), 0), 0, 10);
             r.sour = clamp(asInt(node.get("sour"), 0), 0, 10);
+            r.category = asString(node.get("category"));
+            r.categoryDetail = asString(node.get("category_detail"));
+            r.glass = asString(node.get("glass"));
             r.favorite = false;
 
             String instructions = readRecipeField(node.get("recipe"));

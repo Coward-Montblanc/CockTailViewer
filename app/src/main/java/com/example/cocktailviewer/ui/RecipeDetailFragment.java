@@ -44,55 +44,69 @@ public class RecipeDetailFragment extends Fragment {
         Recipe r = repo.getRecipe(id);
 
         TextView tvTitle = v.findViewById(R.id.tvTitle);
-        TextView tvIns = v.findViewById(R.id.tvInstructions);
+        TextView tvIngredients = v.findViewById(R.id.tvIngredients);
+        TextView tvGlass = v.findViewById(R.id.tvGlass);
+        TextView tvRecipe = v.findViewById(R.id.tvRecipe);
 
         if (r == null) {
             tvTitle.setText("Not Found");
             tvIns.setText("");
             return;
         }
+        v.findViewById(R.id.btnDelete).setOnClickListener(view -> {
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                    .setTitle("삭제")
+                    .setMessage("이 레시피를 삭제할까요?")
+                    .setPositiveButton("예", (d, w) -> {
+                        repo.deleteRecipe(r.id);
+                        requireActivity().getSupportFragmentManager().popBackStack();
+                    })
+                    .setNegativeButton("아니오", null)
+                    .show();
+        });
+        v.findViewById(R.id.btnEdit).setOnClickListener(view -> {
+            requireActivity().getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, RecipeEditorFragment.newInstance(r.id))
+                    .addToBackStack(null)
+                    .commit();
+        });
         tvTitle.setText(r.name);
         List<RecipeRepository.IngredientLine> lines =
                 repo.getIngredientsOfRecipe(r.id);
 
         StringBuilder sb = new StringBuilder();
 
-// 1️⃣ 필수재료
+        // 필수재료
         for (RecipeRepository.IngredientLine l : lines) {
             if (!l.optional) {
-                sb.append(l.name)
-                        .append(" ")
-                        .append(l.amount)
-                        .append("\n");
+                sb.append(l.name).append(" ").append(l.amount).append("\n");
             }
         }
 
-// 2️⃣ 선택재료
+        // 선택재료
         boolean hasOptional = false;
         for (RecipeRepository.IngredientLine l : lines) {
-            if (l.optional) {
-                hasOptional = true;
-                break;
-            }
+            if (l.optional) { hasOptional = true; break; }
         }
-
         if (hasOptional) {
             sb.append("\n");
             for (RecipeRepository.IngredientLine l : lines) {
                 if (l.optional) {
-                    sb.append("(선택) ")
-                            .append(l.name)
-                            .append(" ")
-                            .append(l.amount)
-                            .append("\n");
+                    sb.append("(선택) ").append(l.name).append(" ").append(l.amount).append("\n");
                 }
             }
         }
 
-// 3️⃣ 두칸 줄바꿈 + 레시피 본문
-        sb.append("\n\n");
-        sb.append(r.instructions);
+        tvIngredients.setText(sb.toString().trim());
+        tvRecipe.setText(r.instructions == null ? "" : r.instructions);
 
-        tvIns.setText(sb.toString());
+        // glass 표시
+        String g = (r.glass == null) ? "" : r.glass.trim();
+        if (g.isEmpty()) {
+            tvGlass.setVisibility(View.GONE);
+        } else {
+            tvGlass.setVisibility(View.VISIBLE);
+            tvGlass.setText("잔: " + g);
+        }
     }
 }

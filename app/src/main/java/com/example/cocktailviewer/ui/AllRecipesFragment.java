@@ -56,4 +56,11 @@ public class AllRecipesFragment extends Fragment {
         List<Recipe> list = repo.getAllRecipes();   // ✅ 필터 없이 전체
         adapter.submit(list);
     }
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (repo != null && adapter != null) {
+            reload();
+        }
+    }
 }

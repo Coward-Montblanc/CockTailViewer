@@ -31,6 +31,18 @@ public class EditorIngredientAdapter extends RecyclerView.Adapter<EditorIngredie
         rows.add(new EditorIngredientRow());
         notifyItemInserted(rows.size() - 1);
     }
+    public void clear() {
+        rows.clear();
+        notifyDataSetChanged();
+    }
+
+    public void addRow(String name, String amount) {
+        EditorIngredientRow r = new EditorIngredientRow();
+        r.name = name == null ? "" : name;
+        r.amount = amount == null ? "" : amount;
+        rows.add(r);
+        notifyItemInserted(rows.size() - 1);
+    }
 
     public void removeRow(int pos) {
         if (pos < 0 || pos >= rows.size()) return;

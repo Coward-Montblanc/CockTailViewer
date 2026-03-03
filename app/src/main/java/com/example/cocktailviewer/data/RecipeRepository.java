@@ -83,7 +83,6 @@ public class RecipeRepository {
 
     // ---------- Recipes ----------
     public long upsertRecipeByName(Recipe recipe) {
-        // 기본 정책: 이름 중복이면 덮어쓰기
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         Long existingId = findRecipeIdByName(recipe.name);
@@ -94,6 +93,9 @@ public class RecipeRepository {
             cv.put("sweet", recipe.sweet);
             cv.put("sour", recipe.sour);
             cv.put("favorite", recipe.favorite ? 1 : 0);
+            cv.put("category", recipe.category == null ? "" : recipe.category);
+            cv.put("category_detail", recipe.categoryDetail == null ? "" : recipe.categoryDetail);
+            cv.put("glass", recipe.glass == null ? "" : recipe.glass);
             db.update("recipes", cv, "id=?", new String[]{String.valueOf(existingId)});
             return existingId;
         } else {
@@ -104,6 +106,9 @@ public class RecipeRepository {
             cv.put("sweet", recipe.sweet);
             cv.put("sour", recipe.sour);
             cv.put("favorite", recipe.favorite ? 1 : 0);
+            cv.put("category", recipe.category == null ? "" : recipe.category);
+            cv.put("category_detail", recipe.categoryDetail == null ? "" : recipe.categoryDetail);
+            cv.put("glass", recipe.glass == null ? "" : recipe.glass);
             return db.insert("recipes", null, cv);
         }
     }
@@ -128,18 +133,24 @@ public class RecipeRepository {
 
     public Recipe getRecipe(long id) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = db.rawQuery("SELECT id, name, instructions, abv, sweet, sour, favorite FROM recipes WHERE id=? LIMIT 1",
-                new String[]{String.valueOf(id)});
+        Cursor c = db.rawQuery(
+            "SELECT id, name, category, category_detail, glass, instructions, abv, sweet, sour, favorite " +
+            "FROM recipes WHERE id=? LIMIT 1",
+            new String[]{String.valueOf(id)}
+        );
         try {
             if (!c.moveToFirst()) return null;
             Recipe r = new Recipe();
             r.id = c.getLong(0);
             r.name = c.getString(1);
-            r.instructions = c.getString(2);
-            r.abv = c.getInt(3);
-            r.sweet = c.getInt(4);
-            r.sour = c.getInt(5);
-            r.favorite = c.getInt(6) == 1;
+            r.category = c.getString(2);
+            r.categoryDetail = c.getString(3);
+            r.glass = c.getString(4);
+            r.instructions = c.getString(5);
+            r.abv = c.getInt(6);
+            r.sweet = c.getInt(7);
+            r.sour = c.getInt(8);
+            r.favorite = c.getInt(9) == 1;
             return r;
         } finally {
             c.close();
@@ -183,9 +194,33 @@ public class RecipeRepository {
             cv.put("amount", ri.amount == null ? "" : ri.amount);
             cv.put("optional", ri.optional ? 1 : 0);
             db.insert("recipe_ingredients", null, cv);
-            // 재료 마스터에 자동 등록(보유=false)
             addIngredientIfNotExists(ri.ingredientName);
         }
+    }
+
+    public void deleteRecipe(long recipeId) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        db.delete("recipe_ingredients", "recipe_id=?", new String[]{String.valueOf(recipeId)});
+        db.delete("recent_views", "recipe_id=?", new String[]{String.valueOf(recipeId)});
+        db.delete("recipes", "id=?", new String[]{String.valueOf(recipeId)});
+    }
+
+    public void updateRecipeById(Recipe recipe) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+
+        cv.put("name", recipe.name);
+        cv.put("category", recipe.category == null ? "" : recipe.category);
+        cv.put("category_detail", recipe.categoryDetail == null ? "" : recipe.categoryDetail);
+        cv.put("glass", recipe.glass == null ? "" : recipe.glass);
+
+        cv.put("instructions", recipe.instructions);
+        cv.put("abv", recipe.abv);
+        cv.put("sweet", recipe.sweet);
+        cv.put("sour", recipe.sour);
+        cv.put("favorite", recipe.favorite ? 1 : 0);
+
+        db.update("recipes", cv, "id=?", new String[]{String.valueOf(recipe.id)});
     }
 
     // ---------- Recent ----------
@@ -344,6 +379,29 @@ public class RecipeRepository {
         }
 
         return out;
+    }
+
+    public boolean existsRecipeNameExceptId(String name, long exceptId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery(
+                "SELECT id FROM recipes WHERE name=? AND id<>? LIMIT 1",
+                new String[]{name, String.valueOf(exceptId)}
+        );
+        try {
+            return c.moveToFirst();
+        } finally {
+            c.close();
+        }
+    }
+
+    public boolean existsRecipeName(String name) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT id FROM recipes WHERE name=? LIMIT 1", new String[]{name});
+        try {
+            return c.moveToFirst();
+        } finally {
+            c.close();
+        }
     }
 
 }

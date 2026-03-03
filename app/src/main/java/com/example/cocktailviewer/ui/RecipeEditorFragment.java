@@ -22,12 +22,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RecipeEditorFragment extends Fragment {
+    private static final String ARG_EDIT_ID = "editRecipeId";
 
-    public static RecipeEditorFragment newInstance() { return new RecipeEditorFragment(); }
+    public static RecipeEditorFragment newInstance() {
+        return new RecipeEditorFragment();
+    }
+
+    public static RecipeEditorFragment newInstance(long recipeId) {
+        RecipeEditorFragment f = new RecipeEditorFragment();
+        Bundle b = new Bundle();
+        b.putLong(ARG_EDIT_ID, recipeId);
+        f.setArguments(b);
+        return f;
+    }
+
+    private long editRecipeId = -1;
+    private String originalName = null;
 
     private RecipeRepository repo;
 
-    private EditText etName, etAbv, etSweet, etSour, etInstructions;
+    private EditText etName, etAbv, etSweet, etSour, etInstructions, etCategory, etCategoryDetail, etGlass;
     private MaterialButton btnAddRequired, btnAddOptional, btnSave;
 
     private EditorIngredientAdapter requiredAdapter;
@@ -46,6 +60,9 @@ public class RecipeEditorFragment extends Fragment {
         etSweet = v.findViewById(R.id.etSweet);
         etSour = v.findViewById(R.id.etSour);
         etInstructions = v.findViewById(R.id.etInstructions);
+        etCategory = v.findViewById(R.id.etCategory);
+        etCategoryDetail = v.findViewById(R.id.etCategoryDetail);
+        etGlass = v.findViewById(R.id.etGlass);
 
         btnAddRequired = v.findViewById(R.id.btnAddRequired);
         btnAddOptional = v.findViewById(R.id.btnAddOptional);
@@ -63,19 +80,60 @@ public class RecipeEditorFragment extends Fragment {
         rvRequired.setAdapter(requiredAdapter);
         rvOptional.setAdapter(optionalAdapter);
 
-        // 기본으로 한 줄씩 만들어두면 UX가 좋음
         requiredAdapter.addRow();
 
         btnAddRequired.setOnClickListener(view -> requiredAdapter.addRow());
         btnAddOptional.setOnClickListener(view -> optionalAdapter.addRow());
 
         btnSave.setOnClickListener(view -> saveRecipe());
+
+        if (getArguments() != null && getArguments().containsKey(ARG_EDIT_ID)) {
+            editRecipeId = getArguments().getLong(ARG_EDIT_ID, -1);
+        }
+
+        if (editRecipeId != -1) {
+            Recipe r = repo.getRecipe(editRecipeId);
+            if (r != null) {
+                originalName = r.name;
+
+                etName.setText(r.name);
+                etCategory.setText(r.category == null ? "" : r.category);
+                etCategoryDetail.setText(r.categoryDetail == null ? "" : r.categoryDetail);
+                etAbv.setText(String.valueOf(r.abv));
+                etSweet.setText(String.valueOf(r.sweet));
+                etSour.setText(String.valueOf(r.sour));
+                etInstructions.setText(r.instructions == null ? "" : r.instructions);
+                etGlass.setText(r.glass == null ? "" : r.glass);
+
+                // 재료 프리필
+                List<RecipeIngredient> ris = repo.getRecipeIngredients(editRecipeId);
+                requiredAdapter.clear();
+                optionalAdapter.clear();
+
+                boolean anyReq = false;
+                for (RecipeIngredient ri : ris) {
+                    if (!ri.optional) {
+                        requiredAdapter.addRow(ri.ingredientName, ri.amount);
+                        anyReq = true;
+                    }
+                }
+                if (!anyReq) requiredAdapter.addRow();
+
+                for (RecipeIngredient ri : ris) {
+                    if (ri.optional) {
+                        optionalAdapter.addRow(ri.ingredientName, ri.amount);
+                    }
+                }
+
+                btnSave.setText("저장");
+            }
+        }
     }
 
     private void saveRecipe() {
         String name = txt(etName).trim();
         if (name.isEmpty()) {
-            Toast.makeText(requireContext(), "칵테일 이름을 입력해줘", Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireContext(), "칵테일 이름을 입력해야합니다.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -85,16 +143,41 @@ public class RecipeEditorFragment extends Fragment {
         String instructions = txt(etInstructions);
 
         Recipe r = new Recipe();
+        r.id = editRecipeId;
         r.name = name;
+        r.category = txt(etCategory).trim();
+        r.categoryDetail = txt(etCategoryDetail).trim();
+        r.glass = txt(etGlass).trim();
         r.abv = Math.max(0, abv);
         r.sweet = sweet;
         r.sour = sour;
         r.instructions = instructions == null ? "" : instructions;
-        r.favorite = false;
 
-        long recipeId = repo.upsertRecipeByName(r);
+        if (editRecipeId == -1) {
+            if (repo.existsRecipeName(name)) {
+                toast("이미 같은 이름의 레시피가 있습니다.");
+                return;
+            }
+            long newId = repo.upsertRecipeByName(r);
+            saveIngredients(newId);
+        } else {
+            if (repo.existsRecipeNameExceptId(name, editRecipeId)) {
+                toast("이미 같은 이름의 레시피가 있습니다.");
+                return;
+            }
+            Recipe old = repo.getRecipe(editRecipeId);
+            r.favorite = old != null && old.favorite;
 
+            repo.updateRecipeById(r);
+            saveIngredients(editRecipeId);
+        }
+
+        requireActivity().getSupportFragmentManager().popBackStack();
+    }
+
+    private void saveIngredients(long recipeId) {
         List<RecipeIngredient> all = new ArrayList<>();
+
         for (EditorIngredientRow row : requiredAdapter.getRows()) {
             String n = safe(row.name);
             if (n.isEmpty()) continue;
@@ -117,9 +200,6 @@ public class RecipeEditorFragment extends Fragment {
         }
 
         repo.replaceRecipeIngredients(recipeId, all);
-
-        Toast.makeText(requireContext(), "등록 완료: " + name, Toast.LENGTH_SHORT).show();
-        requireActivity().getSupportFragmentManager().popBackStack();
     }
 
     private static String txt(EditText et) {
