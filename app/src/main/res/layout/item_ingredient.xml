@@ -29,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="67dp"
-            android:text="있음"
+            android:text="없음"
             android:textColor="#FFFFFF"
             android:textColorHint="#FFFEFE" />
 

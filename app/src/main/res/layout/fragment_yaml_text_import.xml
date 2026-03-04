@@ -1,58 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- 🔥 배경 이미지 -->
+    <ImageView
+        android:id="@+id/bgImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/bg_home"
+        android:scaleType="centerCrop"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="12dp">
+        android:background="@drawable/bg_glass_panel"
+        android:layout_marginTop="80dp"
+        android:layout_marginHorizontal="30dp">
 
-        <LinearLayout
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_glass_panel"
-            android:padding="12dp">
+            android:padding="5dp"
+            android:text="YAML 텍스트를 붙여넣고 등록하세요."
+            android:textAlignment="center"
+            android:textColor="#FFFFFF" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="YAML 텍스트를 붙여넣고 등록하세요."
-                android:textColor="#FFFFFF" />
+        <EditText
+            android:id="@+id/etYamlInput"
+            android:layout_width="match_parent"
+            android:layout_height="460dp"
+            android:gravity="top"
+            android:hint="여기에 YAML 전체를 붙여넣기"
+            android:inputType="textMultiLine"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFEFE"
+            android:scrollbars="vertical" />
 
-            <EditText
-                android:id="@+id/etYamlInput"
-                android:layout_width="match_parent"
-                android:layout_height="360dp"
-                android:gravity="top"
-                android:hint="여기에 YAML 전체를 붙여넣기"
-                android:inputType="textMultiLine"
-                android:textColor="#FFFFFF"
-                android:textColorHint="#FFFEFE"
-                android:scrollbars="vertical" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnYamlImport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="등록" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnYamlImport"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="등록" />
+        <TextView
+            android:id="@+id/tvResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="(결과가 여기에 표시됩니다)"
+            android:textColor="#FFFFFF" />
 
-            <TextView
-                android:id="@+id/tvResult"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="(결과가 여기에 표시됩니다)"
-                android:textColor="#FFFFFF" />
-
-        </LinearLayout>
 
         <!-- 하단 여유 -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="100dp" />
+            android:layout_height="30dp" />
     </LinearLayout>
-</ScrollView>
+</FrameLayout>

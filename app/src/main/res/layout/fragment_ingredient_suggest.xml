@@ -3,36 +3,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp">
+        android:layout_height="match_parent"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+        <ImageView
+            android:id="@+id/bgImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/bg_home"
+            android:scaleType="centerCrop"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_glass_panel"
-            android:padding="12dp">
+            android:paddingHorizontal="35dp"
+            android:paddingTop="80dp">
 
-            <TextView
-                android:id="@+id/tvHint"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="보유 재료 기준으로 '한 가지 재료만 사면 완성되는 레시피'를 계산합니다."
-                android:textColor="#FFFFFF" />
+                android:orientation="vertical"
+                android:background="@drawable/bg_glass_panel"
+                android:padding="12dp">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvSuggest"
+                <TextView
+                    android:id="@+id/tvHint"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="보유 재료 기준으로 '한 가지 재료만 사면 완성되는 레시피'를 계산합니다."
+                    android:textColor="#FFFFFF" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSuggest"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"/>
+
+            </LinearLayout>
+
+            <View
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"/>
-
+                android:layout_height="100dp" />
         </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="100dp" />
-    </LinearLayout>
+    </FrameLayout>
 </ScrollView>

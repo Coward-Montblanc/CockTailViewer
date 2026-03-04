@@ -226,4 +226,8 @@ public class RecipeEditorFragment extends Fragment {
     private static String safe(String s) {
         return s == null ? "" : s.trim();
     }
+    private void toast(String msg) {
+        if (!isAdded()) return;
+        Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+    }
 }

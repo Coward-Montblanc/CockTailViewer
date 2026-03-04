@@ -2,6 +2,7 @@ package com.example.cocktailviewer.ui;
 
 import android.os.Bundle;
 import android.view.*;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -47,8 +48,8 @@ public class RecipeDetailFragment extends Fragment {
         TextView tvIngredients = v.findViewById(R.id.tvIngredients);
         TextView tvGlass = v.findViewById(R.id.tvGlass);
         TextView tvRecipe = v.findViewById(R.id.tvRecipe);
-        TextView tvRatingValue = view.findViewById(R.id.tvRatingValue);
-        SeekBar sbRating = view.findViewById(R.id.sbRating);
+        TextView tvRatingValue = v.findViewById(R.id.tvRatingValue);
+        SeekBar sbRating = v.findViewById(R.id.sbRating);
 
         if (r == null) {
             tvTitle.setText("Not Found");
@@ -82,8 +83,8 @@ public class RecipeDetailFragment extends Fragment {
 
             @Override public void onStopTrackingTouch(SeekBar seekBar) {
                 int v = seekBar.getProgress();
-                repo.setRating(recipe.id, v); // repo는 네가 쓰는 repository 인스턴스
-                recipe.rating = v;            // 메모리 값도 갱신(옵션)
+                repo.setRating(r.id, v); // repo는 네가 쓰는 repository 인스턴스
+                r.rating = v;            // 메모리 값도 갱신(옵션)
             }
         });
         tvTitle.setText(r.name);
@@ -116,7 +117,7 @@ public class RecipeDetailFragment extends Fragment {
         tvIngredients.setText(sb.toString().trim());
         tvRecipe.setText(r.instructions == null ? "" : r.instructions);
 
-        sbRating.setProgress(Math.max(0, Math.min(10, recipe.rating)));
+        sbRating.setProgress(Math.max(0, Math.min(10, r.rating)));
         tvRatingValue.setText("별점: " + sbRating.getProgress() + "/10");
 
         // glass 표시

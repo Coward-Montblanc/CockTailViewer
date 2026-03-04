@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 public class RecipeRepository {
 
@@ -455,7 +456,7 @@ public class RecipeRepository {
     private static String safeTrim(String s) {
         return s == null ? "" : s.trim();
     }
-    private static String norm(String s) {
+    public static String norm(String s) {
         if (s == null) return "";
         // 일반 공백 + 특수공백(NBSP)까지 정리
         String t = s.replace('\u00A0', ' ').trim();

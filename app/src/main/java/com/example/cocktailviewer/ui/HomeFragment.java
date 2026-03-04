@@ -1,5 +1,7 @@
 package com.example.cocktailviewer.ui;
 
+import static com.example.cocktailviewer.data.RecipeRepository.norm;
+
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;

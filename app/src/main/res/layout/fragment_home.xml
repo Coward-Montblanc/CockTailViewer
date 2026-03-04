@@ -84,44 +84,45 @@
                 android:max="100"
                 android:progress="100" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnIngredientCombo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:text="재료조합 검색" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:baselineAligned="false"
                 android:orientation="horizontal"
                 android:paddingTop="8dp">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRecent"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
+                    android:layout_height="60dp"
                     android:layout_weight="1"
-                    android:text="최근 본 레시피" />
+                    android:text="최근 본 레시피"
+                    android:textColor="#FFFFFF" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnFav"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="60dp"
                     android:layout_marginStart="8dp"
-                    android:textColor="#FFFFFF"
                     android:layout_weight="1"
-                    android:text="즐겨찾기" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnIngredientCombo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#FFFFFF"
-                    android:text="재료조합 검색" />
+                    android:text="즐겨찾기"
+                    android:textColor="#FFFFFF" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRandom"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="60dp"
                     android:layout_marginStart="8dp"
-                    android:textColor="#FFFFFF"
                     android:layout_weight="1"
-                    android:text="무작위 추천" />
+                    android:text="무작위 추천"
+                    android:textColor="#FFFFFF" />
             </LinearLayout>
 
             <androidx.recyclerview.widget.RecyclerView

@@ -55,6 +55,7 @@
             android:id="@+id/tvRating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_below="@id/tvSour"
             android:text="별점: 0/10"/>
 
     </RelativeLayout>
