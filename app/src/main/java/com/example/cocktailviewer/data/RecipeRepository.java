@@ -356,7 +356,7 @@ public class RecipeRepository {
         }
         return out;
     }
-    
+
     public List<Recipe> getCraftableRecipesBySelectedNames(HashSet<String> selectedNormalizedNames) {
         HashSet<String> selected = (selectedNormalizedNames == null) ? new HashSet<>() : selectedNormalizedNames;
 
@@ -563,6 +563,10 @@ public class RecipeRepository {
         } finally {
             c.close();
         }
+    }
+
+    public boolean recipeNameExists(String name) {
+        return findRecipeIdByName(name) != null;
     }
 
 }

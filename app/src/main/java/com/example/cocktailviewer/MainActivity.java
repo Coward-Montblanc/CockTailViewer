@@ -23,6 +23,7 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 import com.example.cocktailviewer.data.YamlIO;
 import com.example.cocktailviewer.ui.AllRecipesFragment;
+import com.example.cocktailviewer.ui.YamlTextImportFragment;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -128,6 +129,13 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.menu_ingredients) {
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragmentContainer, IngredientFragment.newInstance())
+                        .addToBackStack(null)
+                        .commit();
+                return true;
+            }
+            if (id == R.id.menu_import_yaml_text) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragmentContainer, YamlTextImportFragment.newInstance())
                         .addToBackStack(null)
                         .commit();
                 return true;

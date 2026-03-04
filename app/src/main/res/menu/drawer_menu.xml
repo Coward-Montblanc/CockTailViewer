@@ -15,5 +15,8 @@
             android:title="레시피파일 추출" />
         <item android:id="@+id/menu_ingredients"
             android:title="재료 등록" />
+        <item
+            android:id="@+id/menu_import_yaml_text"
+            android:title="레시피 yaml로 등록" />
     </group>
 </menu>

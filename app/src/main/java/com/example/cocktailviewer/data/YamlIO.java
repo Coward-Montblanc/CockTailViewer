@@ -76,6 +76,66 @@ public class YamlIO {
         return imported;
     }
 
+    public static ImportResult importFromTextSkipDuplicates(RecipeRepository repo, String yamlText) {
+        String text = (yamlText == null) ? "" : yamlText.trim();
+        if (text.isEmpty()) throw new IllegalArgumentException("YAML 입력이 비어있습니다.");
+
+        Yaml yaml = new Yaml();
+        Object rootObj = yaml.load(text);
+        if (!(rootObj instanceof Map)) {
+            throw new IllegalArgumentException("최상위 YAML 형식이 올바르지 않습니다.");
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<Object, Object> root = (Map<Object, Object>) rootObj;
+
+        int ok = 0, dup = 0, fail = 0;
+
+        for (Map.Entry<Object, Object> entry : root.entrySet()) {
+            try {
+                String cocktailName = entry.getKey() == null ? "" : entry.getKey().toString().trim();
+                if (cocktailName.isEmpty()) { fail++; continue; }
+
+                // ★ 중복 정책: 동일 이름이면 스킵
+                if (repo.recipeNameExists(cocktailName)) {
+                    dup++;
+                    continue;
+                }
+
+                if (!(entry.getValue() instanceof Map)) { fail++; continue; }
+
+                @SuppressWarnings("unchecked")
+                Map<Object, Object> node = (Map<Object, Object>) entry.getValue();
+
+                Recipe r = new Recipe();
+                r.name = cocktailName;
+                r.abv = asInt(node.get("abv"), 0);
+                r.sweet = clamp(asInt(node.get("sweet"), 0), 0, 10);
+                r.sour = clamp(asInt(node.get("sour"), 0), 0, 10);
+                r.category = asString(node.get("category"));
+                r.categoryDetail = asString(node.get("category_detail"));
+                r.glass = asString(node.get("glass"));
+                r.favorite = false;
+
+                String instructions = readRecipeField(node.get("recipe"));
+                r.instructions = instructions == null ? "" : instructions;
+
+                long recipeId = repo.upsertRecipeByName(r);
+
+                List<RecipeIngredient> all = new ArrayList<>();
+                all.addAll(readIngredientsList(recipeId, node.get("ingredients"), false));
+                all.addAll(readIngredientsList(recipeId, node.get("optionalIngredients"), true));
+                repo.replaceRecipeIngredients(recipeId, all);
+
+                ok++;
+            } catch (Exception e) {
+                fail++;
+            }
+        }
+
+        return new ImportResult(ok, dup, fail);
+    }
+
     private static List<RecipeIngredient> readIngredientsList(long recipeId, Object obj, boolean optional) {
         List<RecipeIngredient> out = new ArrayList<>();
         if (!(obj instanceof List)) return out;
@@ -120,6 +180,18 @@ public class YamlIO {
             return sb.toString();
         }
         return obj.toString();
+    }
+
+    public static class ImportResult {
+        public int success;
+        public int duplicate;
+        public int failed;
+
+        public ImportResult(int success, int duplicate, int failed) {
+            this.success = success;
+            this.duplicate = duplicate;
+            this.failed = failed;
+        }
     }
 
     // ===== Export =====
