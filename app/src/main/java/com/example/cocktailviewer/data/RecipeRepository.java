@@ -569,4 +569,99 @@ public class RecipeRepository {
         return findRecipeIdByName(name) != null;
     }
 
+    public static class IngredientSuggest {
+        public String name;
+        public int count;
+        public ArrayList<String> samples = new ArrayList<>();
+
+        public IngredientSuggest(String name) {
+            this.name = name;
+        }
+    }
+
+    public void setIngredientHas(String name, boolean has) {
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("has", has ? 1 : 0);
+        db.update("ingredients", cv, "name=?", new String[]{ name });
+    }
+
+    public List<IngredientSuggest> getNextBuySuggestions(int samplePerIngredient) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        // 1) 보유 재료 집합
+        HashSet<String> owned = new HashSet<>();
+        Cursor oc = db.rawQuery("SELECT name FROM ingredients WHERE has=1", null);
+        try {
+            while (oc.moveToNext()) owned.add(norm(oc.getString(0)));
+        } finally {
+            oc.close();
+        }
+
+        // 2) recipe_id -> recipe_name
+        HashMap<Long, String> recipeName = new HashMap<>();
+        Cursor rc = db.rawQuery("SELECT id, name FROM recipes", null);
+        try {
+            while (rc.moveToNext()) recipeName.put(rc.getLong(0), rc.getString(1));
+        } finally {
+            rc.close();
+        }
+
+        // 3) recipe_id -> required ingredient list (optional=0)
+        HashMap<Long, ArrayList<String>> required = new HashMap<>();
+        Cursor ic = db.rawQuery(
+                "SELECT recipe_id, ingredient_name FROM recipe_ingredients WHERE optional=0",
+                null
+        );
+        try {
+            while (ic.moveToNext()) {
+                long rid = ic.getLong(0);
+                String ing = norm(ic.getString(1));
+                required.computeIfAbsent(rid, k -> new ArrayList<>()).add(ing);
+            }
+        } finally {
+            ic.close();
+        }
+
+        // 4) 부족 필수 재료가 '딱 1개'인 레시피만 카운트
+        //    missing == 1이면 그 missing ingredient를 +1, 샘플 레시피명 추가
+        HashMap<String, IngredientSuggest> map = new HashMap<>();
+
+        for (Map.Entry<Long, String> e : recipeName.entrySet()) {
+            long rid = e.getKey();
+            String rname = e.getValue();
+
+            ArrayList<String> req = required.get(rid);
+            if (req == null || req.isEmpty()) continue; // 필수재료가 없다면 추천 계산에서 제외
+
+            ArrayList<String> missing = new ArrayList<>();
+            for (String ing : req) {
+                if (!owned.contains(ing)) missing.add(ing);
+                if (missing.size() > 1) break; // 2개 이상 부족하면 조기 종료
+            }
+
+            if (missing.size() == 1) {
+                String miss = missing.get(0);
+                IngredientSuggest s = map.computeIfAbsent(miss, IngredientSuggest::new);
+                s.count++;
+
+                if (s.samples.size() < samplePerIngredient) {
+                    s.samples.add(rname);
+                }
+            }
+        }
+
+        // 5) 정렬: count desc, name asc
+        ArrayList<IngredientSuggest> out = new ArrayList<>(map.values());
+        out.sort((a, b) -> {
+            if (b.count != a.count) return Integer.compare(b.count, a.count);
+            return a.name.compareToIgnoreCase(b.name);
+        });
+
+        // 6) 표시용 이름을 “원래 ingredients.name”으로 맞추고 싶다면(선택)
+        // 지금은 norm된 소문자 기반이므로, 실제 표기명 유지가 필요하면 아래처럼 매핑을 만들면 됨.
+        // (우선은 간단히 norm 그대로 출력해도 동작은 함)
+
+        return out;
+    }
 }

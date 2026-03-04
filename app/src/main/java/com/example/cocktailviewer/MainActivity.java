@@ -24,7 +24,7 @@ import android.widget.Toast;
 import com.example.cocktailviewer.data.YamlIO;
 import com.example.cocktailviewer.ui.AllRecipesFragment;
 import com.example.cocktailviewer.ui.YamlTextImportFragment;
-
+import com.example.cocktailviewer.ui.IngredientSuggestFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -136,6 +136,13 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.menu_import_yaml_text) {
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragmentContainer, YamlTextImportFragment.newInstance())
+                        .addToBackStack(null)
+                        .commit();
+                return true;
+            }
+            if (id == R.id.menu_ingredient_suggest) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragmentContainer, IngredientSuggestFragment.newInstance())
                         .addToBackStack(null)
                         .commit();
                 return true;
