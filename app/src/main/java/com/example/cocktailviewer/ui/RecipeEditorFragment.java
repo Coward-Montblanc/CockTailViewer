@@ -74,8 +74,8 @@ public class RecipeEditorFragment extends Fragment {
         rvRequired.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvOptional.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        requiredAdapter = new EditorIngredientAdapter(pos -> requiredAdapter.removeRow(pos));
-        optionalAdapter = new EditorIngredientAdapter(pos -> optionalAdapter.removeRow(pos));
+        requiredAdapter = new EditorIngredientAdapter(repo, pos -> requiredAdapter.removeRow(pos));
+        optionalAdapter = new EditorIngredientAdapter(repo, pos -> optionalAdapter.removeRow(pos));
 
         rvRequired.setAdapter(requiredAdapter);
         rvOptional.setAdapter(optionalAdapter);

@@ -56,6 +56,29 @@ public class RecipeRepository {
         }
         return out;
     }
+    public List<String> searchIngredientNames(String prefix, int limit) {
+        String p = safeTrim(prefix);
+        if (p.isEmpty()) return new ArrayList<>();
+
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery(
+                "SELECT name FROM ingredients " +
+                "WHERE name LIKE ? " +
+                "ORDER BY name COLLATE NOCASE ASC " +
+                "LIMIT ?",
+                new String[]{ p + "%", String.valueOf(limit) }
+        );
+
+        List<String> out = new ArrayList<>();
+        try {
+            while (c.moveToNext()) {
+                out.add(c.getString(0));
+            }
+        } finally {
+            c.close();
+        }
+        return out;
+    }
 
     public void setIngredientHas(long id, boolean has) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -84,6 +107,18 @@ public class RecipeRepository {
         return out;
     }
 
+    public List<String> getOwnedIngredientDisplayNames() {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("SELECT name FROM ingredients WHERE has=1 ORDER BY name COLLATE NOCASE ASC", null);
+
+        List<String> out = new ArrayList<>();
+        try {
+            while (c.moveToNext()) out.add(c.getString(0));
+        } finally {
+            c.close();
+        }
+        return out;
+    }
 
     // ---------- Recipes ----------
     public long upsertRecipeByName(Recipe recipe) {
@@ -319,6 +354,100 @@ public class RecipeRepository {
         } finally {
             rc.close();
         }
+        return out;
+    }
+    
+    public List<Recipe> getCraftableRecipesBySelectedNames(HashSet<String> selectedNormalizedNames) {
+        HashSet<String> selected = (selectedNormalizedNames == null) ? new HashSet<>() : selectedNormalizedNames;
+
+        // recipeId -> required ingredient names
+        HashMap<Long, List<String>> requiredMap = new HashMap<>();
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor c = db.rawQuery("""
+            SELECT recipe_id, ingredient_name
+            FROM recipe_ingredients
+            WHERE optional=0
+        """, null);
+
+        try {
+            while (c.moveToNext()) {
+                long rid = c.getLong(0);
+                String nm = norm(c.getString(1));
+                requiredMap.computeIfAbsent(rid, k -> new ArrayList<>()).add(nm);
+            }
+        } finally {
+            c.close();
+        }
+
+        // 모든 recipes에서 "필수재료 ⊆ 선택집합"만 필터
+        Cursor rc = db.rawQuery("SELECT id, name, instructions, abv, sweet, sour, favorite FROM recipes", null);
+        List<Recipe> out = new ArrayList<>();
+        try {
+            while (rc.moveToNext()) {
+                long rid = rc.getLong(0);
+
+                List<String> req = requiredMap.get(rid);
+                if (req == null) req = new ArrayList<>();
+
+                boolean ok = true;
+                for (String rname : req) {
+                    if (!selected.contains(rname)) { ok = false; break; }
+                }
+                if (!ok) continue;
+
+                Recipe r = new Recipe();
+                r.id = rid;
+                r.name = rc.getString(1);
+                r.instructions = rc.getString(2);
+                r.abv = rc.getInt(3);
+                r.sweet = rc.getInt(4);
+                r.sour = rc.getInt(5);
+                r.favorite = rc.getInt(6) == 1;
+                out.add(r);
+            }
+        } finally {
+            rc.close();
+        }
+
+        return out;
+    }
+
+    public HashSet<Long> searchRecipeIds(String query) {
+        String q = norm(query);
+        HashSet<Long> out = new HashSet<>();
+        if (q.isEmpty()) return out;
+
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        String like = "%" + q + "%";
+
+        // 1) 이름 + 카테고리(category/category_detail)
+        Cursor c1 = db.rawQuery(
+                "SELECT id FROM recipes " +
+                "WHERE LOWER(name) LIKE ? " +
+                "   OR LOWER(category) LIKE ? " +
+                "   OR LOWER(category_detail) LIKE ?",
+                new String[]{ like, like, like }
+        );
+
+        try {
+            while (c1.moveToNext()) out.add(c1.getLong(0));
+        } finally {
+            c1.close();
+        }
+
+        // 2) 재료(recipe_ingredients.ingredient_name)
+        Cursor c2 = db.rawQuery(
+                "SELECT DISTINCT recipe_id FROM recipe_ingredients " +
+                "WHERE LOWER(ingredient_name) LIKE ?",
+                new String[]{ like }
+        );
+
+        try {
+            while (c2.moveToNext()) out.add(c2.getLong(0));
+        } finally {
+            c2.close();
+        }
+
         return out;
     }
 

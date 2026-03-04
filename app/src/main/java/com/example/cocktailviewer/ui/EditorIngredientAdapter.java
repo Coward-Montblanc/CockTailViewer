@@ -14,6 +14,11 @@ import com.example.cocktailviewer.R;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+
+import com.example.cocktailviewer.data.RecipeRepository;
+
 public class EditorIngredientAdapter extends RecyclerView.Adapter<EditorIngredientAdapter.VH> {
 
     public interface Listener {
@@ -23,7 +28,10 @@ public class EditorIngredientAdapter extends RecyclerView.Adapter<EditorIngredie
     private final Listener listener;
     private final List<EditorIngredientRow> rows = new ArrayList<>();
 
-    public EditorIngredientAdapter(Listener listener) {
+    private final RecipeRepository repo;
+
+    public EditorIngredientAdapter(RecipeRepository repo, Listener listener) {
+        this.repo = repo;
         this.listener = listener;
     }
 
@@ -72,8 +80,10 @@ public class EditorIngredientAdapter extends RecyclerView.Adapter<EditorIngredie
 
     @Override public int getItemCount() { return rows.size(); }
 
-    static class VH extends RecyclerView.ViewHolder {
-        EditText etName, etAmount;
+    class VH extends RecyclerView.ViewHolder {
+        AutoCompleteTextView etName;
+        EditText etAmount;
+        ArrayAdapter<String> suggestAdapter;
         ImageButton btnRemove;
 
         TextWatcher nameWatcher;
@@ -84,6 +94,13 @@ public class EditorIngredientAdapter extends RecyclerView.Adapter<EditorIngredie
             etName = itemView.findViewById(R.id.etIngName);
             etAmount = itemView.findViewById(R.id.etAmount);
             btnRemove = itemView.findViewById(R.id.btnRemoveRow);
+
+            suggestAdapter = new ArrayAdapter<>(
+                    itemView.getContext(),
+                    android.R.layout.simple_dropdown_item_1line,
+                    new ArrayList<>()
+            );
+            etName.setAdapter(suggestAdapter);
         }
 
         void bind(EditorIngredientRow row) {
@@ -93,7 +110,33 @@ public class EditorIngredientAdapter extends RecyclerView.Adapter<EditorIngredie
             etName.setText(row.name);
             etAmount.setText(row.amount);
 
-            nameWatcher = new SimpleWatcher(text -> row.name = text);
+            nameWatcher = new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String text = (s == null) ? "" : s.toString();
+                    row.name = text;
+
+                    String q = text.trim();
+                    if (q.length() < 1) {
+                        suggestAdapter.clear();
+                        suggestAdapter.notifyDataSetChanged();
+                        return;
+                    }
+
+                    List<String> suggestions = repo.searchIngredientNames(q, 20);
+
+                    suggestAdapter.clear();
+                    suggestAdapter.addAll(suggestions);
+                    suggestAdapter.notifyDataSetChanged();
+
+                    if (!suggestions.isEmpty()) {
+                        etName.showDropDown();
+                    }
+                }
+
+                @Override public void afterTextChanged(Editable s) {}
+            };
             amountWatcher = new SimpleWatcher(text -> row.amount = text);
 
             etName.addTextChangedListener(nameWatcher);

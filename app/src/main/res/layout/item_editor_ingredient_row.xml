@@ -6,14 +6,16 @@
     android:orientation="horizontal"
     android:padding="6dp">
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/etIngName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:hint="재료명"
         android:textColor="#FFFFFF"
-        android:textColorHint="#FFFEFE"/>
+        android:textColorHint="#FFFEFE"
+        android:completionThreshold="1"
+        android:singleLine="true"/>
 
     <EditText
         android:id="@+id/etAmount"

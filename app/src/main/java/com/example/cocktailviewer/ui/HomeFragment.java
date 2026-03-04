@@ -34,6 +34,10 @@ public class HomeFragment extends Fragment {
     private boolean showRecent = false;
     private boolean showFav = false;
 
+    private Button btnIngredientCombo;
+    
+    private HashSet<String> selectedCombo = null;
+
     private List<Recipe> baseList = new ArrayList<>();
     private RecipeGridAdapter adapter;
 
@@ -53,6 +57,7 @@ public class HomeFragment extends Fragment {
         spSort = v.findViewById(R.id.spSort);
         btnRecent = v.findViewById(R.id.btnRecent);
         btnFav = v.findViewById(R.id.btnFav);
+        btnIngredientCombo = v.findViewById(R.id.btnIngredientCombo);
 
         Button btnRandom = v.findViewById(R.id.btnRandom);
 
@@ -168,10 +173,13 @@ public class HomeFragment extends Fragment {
             applyFilters();
         });
 
+        btnIngredientCombo.setOnClickListener(v -> {openIngredientComboDialog(); btnIngredientCombo.setAlpha(selectedCombo != null ? 1.0f : 0.5f);});
+
         // 초기 상태 표시
         btnRecent.setAlpha(0.5f);
         btnFav.setAlpha(0.5f);
         updateAbvLabel();
+        btnIngredientCombo.setAlpha(0.5f);
     }
 
     private void updateAbvLabel() {
@@ -180,7 +188,11 @@ public class HomeFragment extends Fragment {
 
     private void reload() {
         // DB에서 craftable만 가져오기
-        baseList = repo.getCraftableRecipes();
+        if (selectedCombo == null) {
+            baseList = repo.getCraftableRecipes();
+        } else {
+            baseList = repo.getCraftableRecipesBySelectedNames(selectedCombo);
+        }
         applyFilters();
     }
 
@@ -211,9 +223,11 @@ public class HomeFragment extends Fragment {
         }
 
         if (!q.isEmpty()) {
+            HashSet<Long> matched = repo.searchRecipeIds(q);
+
             List<Recipe> filtered = new ArrayList<>();
             for (Recipe r : list) {
-                if (r.name != null && r.name.toLowerCase(Locale.ROOT).contains(q)) filtered.add(r);
+                if (matched.contains(r.id)) filtered.add(r);
             }
             list = filtered;
         }
@@ -244,5 +258,52 @@ public class HomeFragment extends Fragment {
             default: cmp = Comparator.comparing(a -> a.name.toLowerCase(Locale.ROOT));
         }
         list.sort(cmp);
+    }
+
+    private void openIngredientComboDialog() {
+        List<String> owned = repo.getOwnedIngredientDisplayNames();
+        if (owned.isEmpty()) {
+            Toast.makeText(requireContext(), "보유 재료가 없습니다. 재료 탭에서 보유 체크를 해주세요.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String[] items = owned.toArray(new String[0]);
+        boolean[] checked = new boolean[items.length];
+
+        // 기존 선택값 반영
+        for (int i = 0; i < items.length; i++) {
+            if (selectedCombo != null && selectedCombo.contains(norm(items[i]))) checked[i] = true;
+        }
+
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("보유 재료 선택 (필수재료 기준)")
+                .setMultiChoiceItems(items, checked, (dialog, which, isChecked) -> checked[which] = isChecked)
+
+                // 해제: 조합검색 끄고 기본 craftable(전체 보유 기반)로 복귀
+                .setNeutralButton("해제", (dialog, which) -> {
+                    selectedCombo = null;
+                    btnIngredientCombo.setAlpha(1.0f);
+                    reload();
+                })
+
+                // 적용: 선택 집합으로 craftable 계산
+                .setPositiveButton("검색", (dialog, which) -> {
+                    HashSet<String> sel = new HashSet<>();
+                    for (int i = 0; i < items.length; i++) {
+                        if (checked[i]) sel.add(norm(items[i]));
+                    }
+
+                    if (sel.isEmpty()) {
+                        Toast.makeText(requireContext(), "재료를 1개 이상 선택하세요.", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    selectedCombo = sel;
+                    btnIngredientCombo.setAlpha(1.0f);
+                    reload();
+                })
+
+                .setNegativeButton("취소", null)
+                .show();
     }
 }

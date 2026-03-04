@@ -108,6 +108,13 @@
                     android:text="즐겨찾기" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnIngredientCombo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:text="재료조합 검색" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnRandom"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
