@@ -77,7 +77,7 @@ public class HomeFragment extends Fragment {
         });
 
         RecyclerView rv = v.findViewById(R.id.rvGrid);
-        rv.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        rv.setLayoutManager(new GridLayoutManager(requireContext(), 1));
         adapter = new RecipeGridAdapter(new RecipeGridAdapter.Listener() {
             @Override public void onClick(Recipe r) {
                 // 상세로 이동

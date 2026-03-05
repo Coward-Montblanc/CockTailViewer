@@ -31,7 +31,7 @@ public class AllRecipesFragment extends Fragment {
         repo = ((MainActivity) requireActivity()).repo();
 
         RecyclerView rv = v.findViewById(R.id.rvAllRecipes);
-        rv.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        rv.setLayoutManager(new GridLayoutManager(requireContext(), 1));
 
         adapter = new RecipeGridAdapter(new RecipeGridAdapter.Listener() {
             @Override public void onClick(Recipe r) {

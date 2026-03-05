@@ -555,15 +555,11 @@ public class RecipeRepository {
     }
 
     public Long getRandomRecipeId() {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = db.rawQuery("SELECT id FROM recipes ORDER BY RANDOM() LIMIT 1", null);
+        List<Recipe> craftable = getCraftableRecipes();
+        if (craftable == null || craftable.isEmpty()) return null;
 
-        try {
-            if(c.moveToFirst()) return c.getLong(0);
-            return null;
-        } finally {
-            c.close();
-        }
+        int idx = (int) (Math.random() * craftable.size());
+        return craftable.get(idx).id;
     }
 
     public boolean recipeNameExists(String name) {
