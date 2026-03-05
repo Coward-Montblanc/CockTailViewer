@@ -4,29 +4,30 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <ImageView
         android:id="@+id/bgImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/bg_home"
-        android:scaleType="centerCrop"/>
-    
-    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg_home" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingHorizontal="35dp"
+        android:paddingTop="80dp">
+
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingHorizontal="35dp"
-            android:paddingTop="80dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
                 android:background="@drawable/bg_glass_panel"
+                android:orientation="vertical"
                 android:padding="12dp">
 
                 <TextView
@@ -40,9 +41,9 @@
                     android:id="@+id/rvSuggest"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"/>
+                    android:layout_marginTop="10dp" />
 
             </LinearLayout>
-        </LinearLayout>
     </ScrollView>
+        </LinearLayout>
 </FrameLayout>
